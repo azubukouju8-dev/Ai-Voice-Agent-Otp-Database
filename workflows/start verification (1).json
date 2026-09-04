@@ -1,0 +1,191 @@
+{
+  "name": "start verification",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "   send-otp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3e5c2a0f-d0c1-43c2-bdf9-6107716699a8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -16
+      ],
+      "webhookId": "3856bc4a-540e-46d8-ae7b-3e936b6664f3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"status\": \"sent\" }",
+        "options": {}
+      },
+      "id": "7f84ea00-dc07-4d65-9367-1cc8b2d7bdbd",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        960,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM users\nWHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', ''), 10)\n    = RIGHT(REGEXP_REPLACE('{{ $json.query.phone }}', '[^0-9]', ''), 10)",
+        "options": {
+          "queryReplacement": "={{ $json.query.phone }}"
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        64,
+        -16
+      ],
+      "id": "b4a955d0-2f24-4b65-a261-e50492801da7",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "iP3VtQBWtTlCuOXF",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const code = Math.floor(10000 + Math.random() * 90000).toString();\nreturn [{\n  json: {\n    code: code,\n    email: $input.first().json.email,\n    name: $input.first().json.name,\n    phone: $('Webhook').first().json.query.phone\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -16
+      ],
+      "id": "0ba1f8c4-2bbe-4280-be20-fab9d3ba0607",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO otp_codes (phone, code, expires_at) VALUES ('{{ $json.phone }}', '{{ $json.code }}', DATE_ADD(NOW(), INTERVAL 10 MINUTE))",
+        "options": {
+          "queryReplacement": "="
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        512,
+        -16
+      ],
+      "id": "62e76ac0-5347-4a9d-80aa-1dda83269b04",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "mySql": {
+          "id": "iP3VtQBWtTlCuOXF",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail":"support@example.com",
+        "toEmail": "={{ $('Code in JavaScript').first().json.email }}",
+        "subject": "Your verification code",
+        "emailFormat": "text",
+        "text": "=Your verification code is {{ $('Code in JavaScript').first().json.code }}\n\nThis code expires in 10 minutes.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        736,
+        -16
+      ],
+      "id": "3ab87e86-5f39-4b39-9be3-44b9b11568c3",
+      "name": "Send an Email",
+      "webhookId": "82cafb2a-b9f8-4ea5-bc83-c41daa000318",
+      "credentials": {
+        "smtp": {
+          "id": "UD64yAs3cCKMUm55",
+          "name": "SMTP account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "47c8a270-fb65-4744-9897-9ba66398c647",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "189742d34b5604c0cea57473dd85e8f1e19548b23c5e87b24a3503e317868603"
+  },
+  "nodeGroups": [],
+  "id": "FUmfyJmN1ZI2mJxH",
+  "tags": []
+}

@@ -1,0 +1,98 @@
+{
+  "name": "mysql project",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "check-orders",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "dadf7120-2b55-4fca-b576-030fa58dcb6d",
+      "name": "Webhook",
+      "webhookId": "030ce8a2-a0f0-43a2-8e94-b64d8fc946ed"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT name, username, account_bal, bonus, ref_bonus, roi, plan, status, account_verify FROM users WHERE phone = ? LIMIT 1",
+        "options": {
+          "queryReplacement": "={{ $json.body.phone || $json.query.phone }}"
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "4997c435-f651-4149-989a-634d5e032fe9",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "iP3VtQBWtTlCuOXF",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=   {\n     \"found\": true,\n     \"name\": \"{{ $json.name }}\",\n     \"username\": \"{{ $json.username }}\",\n     \"account_balance\": \"{{ $json.account_bal }}\",\n     \"bonus\": \"{{ $json.bonus }}\",\n     \"referral_bonus\": \"{{ $json.ref_bonus }}\",\n     \"roi\": \"{{ $json.roi }}\",\n     \"plan\": \"{{ $json.plan }}\",\n     \"status\": \"{{ $json.status }}\",\n     \"account_verified\": \"{{ $json.account_verify }}\"\n   }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "ce66e854-4590-427a-a295-5988f5a0c4aa",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9cab9c26-ace9-4a60-b97e-ddfaf2f3ccdb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "189742d34b5604c0cea57473dd85e8f1e19548b23c5e87b24a3503e317868603"
+  },
+  "nodeGroups": [],
+  "id": "25UX6CQ87s9KNKbp",
+  "tags": []
+}

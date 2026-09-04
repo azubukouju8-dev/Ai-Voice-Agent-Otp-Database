@@ -1,0 +1,197 @@
+{
+  "name": "Check OTP",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "check-otp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "28f066ba-7285-45d3-9218-d7e97c103eb9",
+      "name": "Webhook",
+      "webhookId": "b33baa09-85fa-428f-9ca8-f1b585f8075f"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ verified: $('Execute a SQL query').first().json.id ? true : false }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        0
+      ],
+      "id": "e0bf55f8-1b90-447b-ae7f-a7cb21f3eddf",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM otp_codes\nWHERE RIGHT(REPLACE(REPLACE(phone, '+', ''), ' ', ''), 10)\n    = RIGHT(REPLACE(REPLACE('{{ $json.query.phone }}', '+', ''), ' ', ''), 10)\n  AND code = '{{ $json.query.code }}'\n  AND used = 0\n  AND expires_at > NOW()\nORDER BY id DESC\nLIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "19ba3d4c-eb4a-45b1-adf7-b4d08e4d95a6",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "iP3VtQBWtTlCuOXF",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE otp_codes SET used = 1 WHERE id = '{{ $json.id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "d4ccd76c-2dde-4ba8-8e93-5cfe0b041037",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "mySql": {
+          "id": "iP3VtQBWtTlCuOXF",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "79d270d9-1ffa-4eab-91aa-bb52c589a67d",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "e075e792-bc40-4d1c-b051-9c581c03108f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"verified\": false}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        144
+      ],
+      "id": "200d8395-0216-4915-baa4-2fe2d21119d9",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5b01081f-315b-45fa-891b-cac91d49e0c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "189742d34b5604c0cea57473dd85e8f1e19548b23c5e87b24a3503e317868603"
+  },
+  "nodeGroups": [],
+  "id": "kuE3VaaH38i0JBPK",
+  "tags": []
+}
