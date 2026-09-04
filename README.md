@@ -21,7 +21,7 @@ Caller → ElevenLabs agent → n8n webhooks → MySQL
 The agent handles the conversation. Three n8n workflows do the operational work, each exposed to the agent as a webhook tool.
 
 ## The workflows
-### start-verification.json
+### [start-verification.json](workflows/start-verification.json)
 
 Issues the one-time code.
 
@@ -29,7 +29,7 @@ Webhook → look up customer → generate code → store it → send email → r
 
 Takes the phone number from the agent, finds the matching customer record, generates a random five-digit code, saves it to otp_codes with an expiry timestamp, and emails it to the address registered on the account.
 
-### check-otp.json
+### [check-otp.json](workflows/check-otp.json)
 
 Validates the code.
 
@@ -37,13 +37,13 @@ Webhook → query code → If → mark used → respond
 
 Checks three conditions: the code matches, it has not expired, and it has not been used before. On success the code is immediately marked as used so it cannot be replayed. Both branches return an explicit status to the agent.
 
-### fetch-account-details.json
+### [mysql project.json](workflows/mysql%20project.json)
 
 Retrieves the account data once the caller is verified.
 
 Webhook → query → respond
 
-## bSetup
+## Setup
 Import the three JSON files into n8n
 Create a MySQL credential and assign it to each SQL node
 Create an SMTP credential and assign it to the email node
